@@ -8,6 +8,12 @@ follow instructions as documented here: https://github.com/monome/libavr32
   
 # building
 
-clone the repo: git clone https://github.com/scanner-darkly/polyearthsea.git  
-multipass is added as a submodule, you will need to init it: git submodule update --init --recursive  
-navigate to multipass/monome_euro/ansible folder (or whichever module you want to build for) and run make
+clone the repo: 
+```
+git clone https://github.com/scanner-darkly/polyearthsea.git
+```  
+multipass is added as a submodule, you will need to init it: 
+```
+git submodule update --init --recursive
+```  
+navigate to `multipass/monome_euro/ansible` folder (or whichever module you want to build for) and run make
