@@ -158,7 +158,8 @@ void process_event(u8 event, u8 *data, u8 length) {
             break;
     
         case GATE_RECEIVED:
-            if (data[1]) es_start_playback(e.p_select, 0);
+            if (data[0] == 7) event_main_clock(1, data[1]);
+            else if (data[1]) es_start_playback(e.p_select, 0);
             break;
         
         case GRID_CONNECTED:
@@ -1747,7 +1748,19 @@ void handler_ESGridKey(u8 x, u8 y, u8 z) {
     refresh_grid();
 }
 
-void render_grid() {    
+void render_grid() {
+    
+    clear_screen();
+    draw_str("POLYEARTHSEA ON TELETYPE", 0, 15, 0);
+    
+    if (es_mode == es_recording) {
+        draw_str("recording..", 2, 15, 0);
+    } else if (es_mode == es_playing) {
+        draw_str("playing ", 2, 15, 0);
+    }
+    
+    refresh_screen();
+
     if (!is_grid_connected()) return;
     
     clear_all_grid_leds();
