@@ -25,13 +25,11 @@ jobs:
 
     - name: restore toolchain
       run: |
-        pushd $HOME
         git clone https://github.com/monome/avr32-toolchain-linux.git deps/avr32-toolchain-linux
         cd deps/avr32-toolchain-linux
         tar xvfz avr32-gnu-toolchain-3.4.3.820-linux.any.x86_64.tar.gz
         mv avr32-gnu-toolchain-linux_x86_64 $HOME/avr32-tools
         unzip avr32-headers-6.2.0.742.zip -d $HOME/avr32-tools/avr32/include
-        popd
         
     - name: build firmware
       run: |
@@ -40,16 +38,35 @@ jobs:
         find ../../.. -name '*.o' -delete
         make
 
-    - name: prepare files
-      id: prepare_files
+    - name: determine file names
+      id: file_names
       run: |
         HEX_FILE_PATH=`echo multipass/monome_euro/${{matrix.module}}/*.hex "$1"`
         HEX_FILE=`basename $HEX_FILE_PATH`
-        ZIP_FILE=`echo "${HEX_FILE//hex/zip}"`
+        NAMED_FILE=`echo "${HEX_FILE//multipass_/${{github.event.repository.name}}_}"`
+        ZIP_FILE=`echo "${NAMED_FILE//hex/zip}"`
         echo ::set-output name=hex_file_path::$HEX_FILE_PATH
-        echo ::set-output name=hex_file::$HEX_FILE
+        echo ::set-output name=named_file::$NAMED_FILE
         echo ::set-output name=zip_file::$ZIP_FILE
-        zip -j ./${ZIP_FILE} $HEX_FILE_PATH multipass/monome_euro/${{matrix.module}}/flash.sh
+
+    - name: create flash command
+      if: matrix.module == 'ansible' || matrix.module == 'teletype'
+      run: |
+        echo "dfu-programmer at32uc3b0512 erase" >> flash.sh
+        echo "dfu-programmer at32uc3b0512 flash ${{steps.file_names.outputs.named_file}} --suppress-bootloader-mem" >> flash.sh
+        echo "dfu-programmer at32uc3b0512 start" >> flash.sh
+
+    - name: create flash command
+      if: matrix.module != 'ansible' && matrix.module != 'teletype'
+      run: |
+        echo "dfu-programmer at32uc3b0256 erase" >> flash.sh
+        echo "dfu-programmer at32uc3b0256 flash ${{steps.file_names.outputs.named_file}} --suppress-bootloader-mem" >> flash.sh
+        echo "dfu-programmer at32uc3b0256 start" >> flash.sh
+
+    - name: prepare files
+      run: |
+        mv ${{ steps.file_names.outputs.hex_file_path }} ${{ steps.file_names.outputs.named_file }}
+        zip -j ${{ steps.file_names.outputs.zip_file }} ${{ steps.file_names.outputs.named_file }} flash.sh
 
     - name: find release
       id: find_release
@@ -63,8 +80,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.find_release.outputs.upload_url }}
-        asset_name: ${{ steps.prepare_files.outputs.zip_file }}
-        asset_path: ./${{ steps.prepare_files.outputs.zip_file }}
+        asset_name: ${{ steps.file_names.outputs.zip_file }}
+        asset_path: ./${{ steps.file_names.outputs.zip_file }}
         asset_content_type: application/zip
 
     - name: add hex to release
@@ -73,6 +90,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.find_release.outputs.upload_url }}
-        asset_name: ${{ steps.prepare_files.outputs.hex_file }}
-        asset_path: ${{ steps.prepare_files.outputs.hex_file_path }}
+        asset_name: ${{ steps.file_names.outputs.named_file }}
+        asset_path: ./${{ steps.file_names.outputs.named_file }}
         asset_content_type: application/octet-stream
