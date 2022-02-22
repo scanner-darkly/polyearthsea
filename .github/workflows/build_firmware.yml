@@ -18,14 +18,15 @@ name: build firmware
 #     types: [opened, reopened]
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [ansible, teletype]
+        module: [ansible, teletype, whitewhale, meadowphysics, earthsea]
 
     steps:
     - uses: actions/checkout@v2
