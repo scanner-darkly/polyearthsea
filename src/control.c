@@ -1730,7 +1730,7 @@ void handler_ESGridKey(u8 x, u8 y, u8 z) {
         if (e.p[e.p_select].edge == ES_EDGE_DRONE) {
             if (z) {
                 u8 found = 0;
-                for (u8 i = 0; i < 4; i++)
+                for (u8 i = 0; i < VOICE_COUNT; i++)
                     if (x == es_notes[i].x && y == es_notes[i].y && es_notes[i].active) {
                         es_note_off(x, y);
                         found = 1;
@@ -2600,7 +2600,7 @@ void render_grid() {
         
         if (e.arp)
             set_grid_led_i(e.p[e.p_select].root_x + (e.p[e.p_select].root_y << 4), 7);
-        for (u8 i = 0; i < 4; i++)
+        for (u8 i = 0; i < VOICE_COUNT; i++)
             if (es_notes[i].active) {
                 x = es_notes[i].x;
                 y = es_notes[i].y;
