@@ -1731,7 +1731,7 @@ void handler_ESGridKey(u8 x, u8 y, u8 z) {
             if (z) {
                 u8 found = 0;
                 for (u8 i = 0; i < VOICE_COUNT; i++)
-                    if (x == es_notes[i].x && y == es_notes[i].y && es_notes[i].active) {
+                    if (x == es_notes[i].x && y == es_notes[i].y && es_notes[i].active && es_notes[i].from_pattern == e.p_select) {
                         es_note_off(x, y);
                         found = 1;
                     }
